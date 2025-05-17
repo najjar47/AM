@@ -6,7 +6,7 @@ class LoadingScene extends Phaser.Scene {
     }
 
     preload() {
-        // Create loading bar
+        // إنشاء شريط التحميل
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
         
@@ -15,33 +15,32 @@ class LoadingScene extends Phaser.Scene {
         progressBox.fillStyle(0x222222, 0.8);
         progressBox.fillRect(width / 4, height / 2 - 30, width / 2, 50);
 
-        // Loading text
+        // نص التحميل
         const loadingText = this.add.text(width / 2, height / 2 - 50, 'جاري التحميل...', {
             font: '20px Arial',
             fill: '#ffffff'
         });
         loadingText.setOrigin(0.5, 0.5);
 
-        // Error text (hidden by default)
+        // نص الخطأ (مخفي افتراضياً)
         this.errorText = this.add.text(width / 2, height * 0.7, '', {
             font: '16px Arial',
             fill: '#ff0000',
             align: 'center'
         }).setOrigin(0.5);
 
-        // Loading progress
+        // تقدم التحميل
         this.load.on('progress', (value) => {
             progressBar.clear();
             progressBar.fillStyle(0x00ff00, 1);
             progressBar.fillRect(width / 4 + 10, height / 2 - 20, (width / 2 - 20) * value, 30);
         });
 
-        // File load error handler
+        // معالج أخطاء تحميل الملفات
         this.load.on('loaderror', (file) => {
             console.error('Error loading asset:', file.key);
             this.errorText.setText('خطأ في تحميل: ' + file.key + '\nجاري استخدام الأصول الاحتياطية...');
             
-            // Continue loading after error
             if (!this.assetsLoaded) {
                 this.time.delayedCall(2000, () => {
                     this.assetsLoaded = true;
@@ -50,7 +49,7 @@ class LoadingScene extends Phaser.Scene {
             }
         });
 
-        // When loading completes
+        // عند اكتمال التحميل
         this.load.on('complete', () => {
             this.assetsLoaded = true;
             progressBar.destroy();
@@ -60,7 +59,6 @@ class LoadingScene extends Phaser.Scene {
             this.scene.start('MenuScene');
         });
 
-        // Load game assets with error handling
         try {
             this.loadAssets();
         } catch (error) {
@@ -70,13 +68,13 @@ class LoadingScene extends Phaser.Scene {
     }
 
     loadAssets() {
-        // Create default rectangle for missing sprites
+        // إنشاء شكل افتراضي للكائنات المفقودة
         const defaultSprite = this.make.graphics({ x: 0, y: 0, add: false });
         defaultSprite.fillStyle(0x4287f5);
         defaultSprite.fillRect(0, 0, 32, 48);
         defaultSprite.generateTexture('default_sprite', 32, 48);
 
-        // Try loading assets with error handling
+        // محاولة تحميل الأصول مع معالجة الأخطاء
         this.load.once('filecomplete-spritesheet-player', () => {
             console.log('Player sprite loaded successfully');
         }).once('loaderror', () => {
@@ -84,13 +82,13 @@ class LoadingScene extends Phaser.Scene {
             this.player = 'default_sprite';
         });
 
-        // Character sprites
+        // تحميل صور الشخصية
         this.load.spritesheet('player', 'assets/sprites/player.png', { 
             frameWidth: 32, 
             frameHeight: 48 
         });
 
-        // Environment assets with fallbacks
+        // تحميل أصول البيئة مع البدائل
         this.load.image('background', 'assets/backgrounds/city.png')
             .on('loaderror', () => {
                 const bg = this.make.graphics({ x: 0, y: 0, add: false });
@@ -107,7 +105,7 @@ class LoadingScene extends Phaser.Scene {
                 platform.generateTexture('platform', 100, 20);
             });
 
-        // UI elements with fallbacks
+        // تحميل عناصر واجهة المستخدم مع البدائل
         this.load.image('logo', 'assets/ui/logo.png')
             .on('loaderror', () => {
                 const logo = this.make.graphics({ x: 0, y: 0, add: false });
@@ -124,7 +122,7 @@ class LoadingScene extends Phaser.Scene {
                 button.generateTexture('button', 200, 50);
             });
 
-        // Audio with silent fallbacks
+        // تحميل الصوت مع بدائل صامتة
         this.load.audio('theme', 'assets/audio/theme.mp3')
             .on('loaderror', () => {
                 this.cache.audio.add('theme', { buffer: new ArrayBuffer(0) });
@@ -137,28 +135,28 @@ class LoadingScene extends Phaser.Scene {
     }
 
     loadFallbackAssets() {
-        // Create basic shapes as fallback assets
+        // إنشاء أشكال أساسية كأصول بديلة
         const graphics = this.make.graphics({ x: 0, y: 0, add: false });
         
-        // Player fallback
+        // بديل اللاعب
         graphics.clear();
         graphics.fillStyle(0x4287f5);
         graphics.fillRect(0, 0, 32, 48);
         graphics.generateTexture('player', 32, 48);
 
-        // Background fallback
+        // بديل الخلفية
         graphics.clear();
         graphics.fillGradientStyle(0x000000, 0x000000, 0x333333, 0x333333, 1);
         graphics.fillRect(0, 0, 800, 600);
         graphics.generateTexture('background', 800, 600);
 
-        // Platform fallback
+        // بديل المنصة
         graphics.clear();
         graphics.fillStyle(0x00ff00);
         graphics.fillRect(0, 0, 100, 20);
         graphics.generateTexture('platform', 100, 20);
 
-        // UI fallbacks
+        // بدائل واجهة المستخدم
         graphics.clear();
         graphics.fillStyle(0xffffff);
         graphics.fillRect(0, 0, 200, 100);
@@ -169,7 +167,7 @@ class LoadingScene extends Phaser.Scene {
         graphics.fillRect(0, 0, 200, 50);
         graphics.generateTexture('button', 200, 50);
 
-        // Silent audio fallbacks
+        // بدائل الصوت الصامتة
         this.cache.audio.add('theme', { buffer: new ArrayBuffer(0) });
         this.cache.audio.add('jump', { buffer: new ArrayBuffer(0) });
     }
@@ -185,44 +183,44 @@ class MenuScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        // Add background
+        // إضافة الخلفية
         this.add.image(width / 2, height / 2, 'background')
             .setScale(width / 800)
             .setAlpha(0.5);
 
-        // Add logo
+        // إضافة الشعار
         this.add.image(width / 2, height * 0.2, 'logo')
             .setScale(0.5);
 
-        // Title text
+        // نص العنوان
         this.add.text(width / 2, height * 0.3, 'أسد المقاومة', {
             font: 'bold 48px Arial',
             fill: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
 
-        // Credits text in Arabic
+        // نص الاعتمادات بالعربية
         this.add.text(width / 2, height * 0.4, 'تصميم: أسامة النجار (أبو حمزة)', {
             font: '24px Arial',
             fill: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
 
-        // Credits text in English
+        // نص الاعتمادات بالإنجليزية
         this.add.text(width / 2, height * 0.45, 'Created by: Osama Al-Najjar (Abu Hamza)', {
             font: '20px Arial',
             fill: '#ffffff',
             align: 'center'
         }).setOrigin(0.5);
 
-        // Progress warning
+        // تحذير التقدم
         const warningText = this.add.text(width / 2, height * 0.52, 'تنبيه: لا يتم حفظ التقدم في اللعبة', {
             font: '20px Arial',
             fill: '#ff9900',
             align: 'center'
         }).setOrigin(0.5);
 
-        // Make warning text blink
+        // جعل نص التحذير يومض
         this.tweens.add({
             targets: warningText,
             alpha: 0.5,
@@ -232,7 +230,7 @@ class MenuScene extends Phaser.Scene {
             repeat: -1
         });
 
-        // Create buttons
+        // إنشاء الأزرار
         this.createButton(width / 2, height * 0.65, 'ابدأ اللعب', () => {
             this.scene.start('GameScene');
         });
@@ -241,7 +239,7 @@ class MenuScene extends Phaser.Scene {
             this.showInstructions();
         });
 
-        // Play theme music
+        // تشغيل موسيقى الخلفية
         this.sound.play('theme', { loop: true, volume: 0.5 });
     }
 
@@ -313,71 +311,93 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-        // Set up game variables
+        // إعداد متغيرات اللعبة
         this.score = 0;
         this.gameOver = false;
 
-        // Add background
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
-        this.add.image(width / 2, height / 2, 'background')
-            .setScale(width / 800);
 
-        // Create platforms group
+        // إنشاء تدرج الخلفية
+        const background = this.add.graphics();
+        background.fillGradientStyle(0x1a1a1a, 0x1a1a1a, 0x4a4a4a, 0x4a4a4a, 1);
+        background.fillRect(0, 0, width, height);
+
+        // إنشاء مجموعة المنصات
         this.platforms = this.physics.add.staticGroup();
         
-        // Add ground
+        // إنشاء رسومات المنصة
+        const platformGraphics = this.add.graphics();
+        platformGraphics.fillStyle(0x00aa00);
+        platformGraphics.fillRect(0, 0, 200, 20);
+        platformGraphics.generateTexture('platform', 200, 20);
+        
+        // إضافة الأرض والمنصات
         this.platforms.create(width / 2, height - 32, 'platform')
-            .setScale(width / 400, 1)
+            .setScale(width / 200, 1)
             .refreshBody();
-
-        // Add some platforms
         this.platforms.create(600, 400, 'platform');
         this.platforms.create(50, 250, 'platform');
         this.platforms.create(750, 220, 'platform');
 
-        // Create player
+        // إنشاء رسومات اللاعب
+        const playerGraphics = this.add.graphics();
+        playerGraphics.fillStyle(0x4287f5);
+        playerGraphics.fillRect(0, 0, 32, 48);
+        playerGraphics.generateTexture('player', 32, 48);
+
+        // إنشاء اللاعب
         this.player = this.physics.add.sprite(100, 450, 'player');
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
 
-        // Player animations
-        this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'turn',
-            frames: [{ key: 'player', frame: 4 }],
-            frameRate: 20
-        });
-
-        this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers('player', { start: 5, end: 8 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        // Add collider between player and platforms
+        // إضافة التصادم بين اللاعب والمنصات
         this.physics.add.collider(this.player, this.platforms);
 
-        // Score text
+        // نص النقاط
         this.scoreText = this.add.text(16, 16, 'النقاط: 0', {
             fontSize: '32px',
             fill: '#fff',
             fontFamily: 'Arial'
         });
 
-        // Controls for touch devices
+        // إضافة العنوان
+        this.add.text(width / 2, 50, 'أسد المقاومة', {
+            font: 'bold 48px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        // إضافة اسم المصمم
+        this.add.text(width / 2, 100, 'تصميم: أسامة النجار (أبو حمزة)', {
+            font: '24px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        // التحكم للأجهزة اللمسية
         if (this.sys.game.device.input.touch) {
             this.setupTouchControls();
         }
 
-        // Keyboard controls
+        // إضافة تعليمات التحكم
+        const instructions = [
+            'التحكم:',
+            'الأسهم: للحركة',
+            'مسافة: للقفز',
+            'شاشة اللمس:',
+            'اليسار/اليمين: للحركة',
+            'الأعلى: للقفز'
+        ];
+
+        this.add.text(16, height - 180, instructions, {
+            font: '20px Arial',
+            fill: '#ffffff',
+            align: 'right',
+            lineSpacing: 10
+        });
+
+        // مفاتيح التحكم
         this.cursors = this.input.keyboard.createCursorKeys();
     }
 
@@ -386,7 +406,7 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
-        // Handle movement
+        // التحكم في الحركة
         if (this.cursors.left.isDown) {
             this.moveLeft();
         } else if (this.cursors.right.isDown) {
@@ -395,54 +415,63 @@ class GameScene extends Phaser.Scene {
             this.stand();
         }
 
-        // Handle jumping
-        if (this.cursors.up.isDown && this.player.body.touching.down) {
+        // التحكم في القفز
+        if ((this.cursors.up.isDown || this.cursors.space.isDown) && this.player.body.touching.down) {
             this.jump();
         }
     }
 
     moveLeft() {
         this.player.setVelocityX(-160);
-        this.player.anims.play('left', true);
+        this.player.setTint(0x0000ff);
     }
 
     moveRight() {
         this.player.setVelocityX(160);
-        this.player.anims.play('right', true);
+        this.player.setTint(0x00ff00);
     }
 
     stand() {
         this.player.setVelocityX(0);
-        this.player.anims.play('turn');
+        this.player.clearTint();
     }
 
     jump() {
         this.player.setVelocityY(-330);
-        this.sound.play('jump', { volume: 0.5 });
     }
 
     setupTouchControls() {
-        // Left half of screen for left movement
-        this.input.on('pointerdown', (pointer) => {
-            if (pointer.y > this.cameras.main.height * 0.7) {
-                if (pointer.x < this.cameras.main.width / 2) {
-                    this.moveLeft();
-                } else {
-                    this.moveRight();
-                }
-            } else {
+        // إنشاء مناطق اللمس
+        const touchZoneLeft = this.add.rectangle(0, this.cameras.main.height * 0.7, 
+            this.cameras.main.width / 2, this.cameras.main.height * 0.3, 0x000000, 0)
+            .setOrigin(0, 0)
+            .setInteractive();
+
+        const touchZoneRight = this.add.rectangle(this.cameras.main.width / 2, this.cameras.main.height * 0.7,
+            this.cameras.main.width / 2, this.cameras.main.height * 0.3, 0x000000, 0)
+            .setOrigin(0, 0)
+            .setInteractive();
+
+        const touchZoneJump = this.add.rectangle(0, 0,
+            this.cameras.main.width, this.cameras.main.height * 0.7, 0x000000, 0)
+            .setOrigin(0, 0)
+            .setInteractive();
+
+        // التحكم باللمس
+        touchZoneLeft.on('pointerdown', () => this.moveLeft());
+        touchZoneRight.on('pointerdown', () => this.moveRight());
+        touchZoneJump.on('pointerdown', () => {
+            if (this.player.body.touching.down) {
                 this.jump();
             }
         });
 
-        // Stop movement when touch ends
-        this.input.on('pointerup', () => {
-            this.stand();
-        });
+        // إيقاف الحركة عند رفع اللمس
+        this.input.on('pointerup', () => this.stand());
     }
 }
 
-// Game configuration - إعدادات اللعبة
+// إعدادات اللعبة
 const config = {
     type: Phaser.AUTO,
     parent: 'game',
@@ -467,7 +496,7 @@ const config = {
     }
 };
 
-// Start the game - بدء اللعبة
+// بدء اللعبة
 window.addEventListener('load', () => {
     new Phaser.Game(config);
 });
