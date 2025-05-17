@@ -1,7 +1,8 @@
-// LoadingScene
+// LoadingScene - مشهد التحميل
 class LoadingScene extends Phaser.Scene {
     constructor() {
         super({ key: 'LoadingScene' });
+        this.assetsLoaded = false;
     }
 
     preload() {
@@ -21,6 +22,13 @@ class LoadingScene extends Phaser.Scene {
         });
         loadingText.setOrigin(0.5, 0.5);
 
+        // Error text (hidden by default)
+        this.errorText = this.add.text(width / 2, height * 0.7, '', {
+            font: '16px Arial',
+            fill: '#ff0000',
+            align: 'center'
+        }).setOrigin(0.5);
+
         // Loading progress
         this.load.on('progress', (value) => {
             progressBar.clear();
@@ -28,40 +36,146 @@ class LoadingScene extends Phaser.Scene {
             progressBar.fillRect(width / 4 + 10, height / 2 - 20, (width / 2 - 20) * value, 30);
         });
 
+        // File load error handler
+        this.load.on('loaderror', (file) => {
+            console.error('Error loading asset:', file.key);
+            this.errorText.setText('خطأ في تحميل: ' + file.key + '\nجاري استخدام الأصول الاحتياطية...');
+            
+            // Continue loading after error
+            if (!this.assetsLoaded) {
+                this.time.delayedCall(2000, () => {
+                    this.assetsLoaded = true;
+                    this.scene.start('MenuScene');
+                });
+            }
+        });
+
         // When loading completes
         this.load.on('complete', () => {
+            this.assetsLoaded = true;
             progressBar.destroy();
             progressBox.destroy();
             loadingText.destroy();
+            this.errorText.destroy();
             this.scene.start('MenuScene');
         });
 
-        // Load game assets
-        this.loadAssets();
+        // Load game assets with error handling
+        try {
+            this.loadAssets();
+        } catch (error) {
+            console.error('Error in loadAssets:', error);
+            this.loadFallbackAssets();
+        }
     }
 
     loadAssets() {
+        // Create default rectangle for missing sprites
+        const defaultSprite = this.make.graphics({ x: 0, y: 0, add: false });
+        defaultSprite.fillStyle(0x4287f5);
+        defaultSprite.fillRect(0, 0, 32, 48);
+        defaultSprite.generateTexture('default_sprite', 32, 48);
+
+        // Try loading assets with error handling
+        this.load.once('filecomplete-spritesheet-player', () => {
+            console.log('Player sprite loaded successfully');
+        }).once('loaderror', () => {
+            console.log('Using default player sprite');
+            this.player = 'default_sprite';
+        });
+
         // Character sprites
         this.load.spritesheet('player', 'assets/sprites/player.png', { 
             frameWidth: 32, 
             frameHeight: 48 
         });
 
-        // Environment assets
-        this.load.image('background', 'assets/backgrounds/city.png');
-        this.load.image('platform', 'assets/environment/platform.png');
-        
-        // UI elements
-        this.load.image('logo', 'assets/ui/logo.png');
-        this.load.image('button', 'assets/ui/button.png');
+        // Environment assets with fallbacks
+        this.load.image('background', 'assets/backgrounds/city.png')
+            .on('loaderror', () => {
+                const bg = this.make.graphics({ x: 0, y: 0, add: false });
+                bg.fillGradientStyle(0x000000, 0x000000, 0x333333, 0x333333, 1);
+                bg.fillRect(0, 0, 800, 600);
+                bg.generateTexture('background', 800, 600);
+            });
 
-        // Audio
-        this.load.audio('theme', 'assets/audio/theme.mp3');
-        this.load.audio('jump', 'assets/audio/jump.mp3');
+        this.load.image('platform', 'assets/environment/platform.png')
+            .on('loaderror', () => {
+                const platform = this.make.graphics({ x: 0, y: 0, add: false });
+                platform.fillStyle(0x00ff00);
+                platform.fillRect(0, 0, 100, 20);
+                platform.generateTexture('platform', 100, 20);
+            });
+
+        // UI elements with fallbacks
+        this.load.image('logo', 'assets/ui/logo.png')
+            .on('loaderror', () => {
+                const logo = this.make.graphics({ x: 0, y: 0, add: false });
+                logo.fillStyle(0xffffff);
+                logo.fillRect(0, 0, 200, 100);
+                logo.generateTexture('logo', 200, 100);
+            });
+
+        this.load.image('button', 'assets/ui/button.png')
+            .on('loaderror', () => {
+                const button = this.make.graphics({ x: 0, y: 0, add: false });
+                button.fillStyle(0x666666);
+                button.fillRect(0, 0, 200, 50);
+                button.generateTexture('button', 200, 50);
+            });
+
+        // Audio with silent fallbacks
+        this.load.audio('theme', 'assets/audio/theme.mp3')
+            .on('loaderror', () => {
+                this.cache.audio.add('theme', { buffer: new ArrayBuffer(0) });
+            });
+
+        this.load.audio('jump', 'assets/audio/jump.mp3')
+            .on('loaderror', () => {
+                this.cache.audio.add('jump', { buffer: new ArrayBuffer(0) });
+            });
+    }
+
+    loadFallbackAssets() {
+        // Create basic shapes as fallback assets
+        const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+        
+        // Player fallback
+        graphics.clear();
+        graphics.fillStyle(0x4287f5);
+        graphics.fillRect(0, 0, 32, 48);
+        graphics.generateTexture('player', 32, 48);
+
+        // Background fallback
+        graphics.clear();
+        graphics.fillGradientStyle(0x000000, 0x000000, 0x333333, 0x333333, 1);
+        graphics.fillRect(0, 0, 800, 600);
+        graphics.generateTexture('background', 800, 600);
+
+        // Platform fallback
+        graphics.clear();
+        graphics.fillStyle(0x00ff00);
+        graphics.fillRect(0, 0, 100, 20);
+        graphics.generateTexture('platform', 100, 20);
+
+        // UI fallbacks
+        graphics.clear();
+        graphics.fillStyle(0xffffff);
+        graphics.fillRect(0, 0, 200, 100);
+        graphics.generateTexture('logo', 200, 100);
+
+        graphics.clear();
+        graphics.fillStyle(0x666666);
+        graphics.fillRect(0, 0, 200, 50);
+        graphics.generateTexture('button', 200, 50);
+
+        // Silent audio fallbacks
+        this.cache.audio.add('theme', { buffer: new ArrayBuffer(0) });
+        this.cache.audio.add('jump', { buffer: new ArrayBuffer(0) });
     }
 }
 
-// MenuScene
+// MenuScene - المشهد الرئيسي
 class MenuScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MenuScene' });
@@ -192,7 +306,7 @@ class MenuScene extends Phaser.Scene {
     }
 }
 
-// GameScene
+// GameScene - مشهد اللعب
 class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
@@ -328,7 +442,7 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-// Game configuration
+// Game configuration - إعدادات اللعبة
 const config = {
     type: Phaser.AUTO,
     parent: 'game',
@@ -353,7 +467,7 @@ const config = {
     }
 };
 
-// Start the game
+// Start the game - بدء اللعبة
 window.addEventListener('load', () => {
     new Phaser.Game(config);
-}); 
+});
