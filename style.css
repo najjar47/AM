@@ -1,0 +1,45 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+#game {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+}
+
+/* Loading screen styles */
+.loading-text {
+    color: #fff;
+    font-size: 24px;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    body {
+        touch-action: none;
+    }
+    
+    #game canvas {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+} 
